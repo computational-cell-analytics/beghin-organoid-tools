@@ -8,7 +8,7 @@ description = "Tools for Anne Beghin group's organoid data."
 authors = [{name = "Anwai Archit", email = "anwai.archit@uni-goettingen.de"}]
 requires-python = ">=3.11"
 dynamic = ["version"]
-dependencies = ["numpy", "tifffile", "zarr>=3", "ome-zarr>=0.19", "click", "rich"]
+dependencies = ["numpy", "scipy", "tifffile", "bioimage-cpp", "zarr>=3", "ome-zarr>=0.19", "click", "rich"]
 
 [project.scripts]
 orgatools = "orgatools._cli:cli"
