@@ -18,4 +18,4 @@ orgatools data convert -i /path/to/tif/folder -o /path/to/output/folder  # every
 ```
 
 Each tif becomes a lossless `.ome.zarr` folder, about 2.5 - 3x smaller than the uncompressed tif. To send the results,
-put them in one archive: `tar -cf data.tar *.ome.zarr`.
+put them in one archive, for example by zipping the folder or using `tar`: `tar -cf data.tar *.ome.zarr`.
