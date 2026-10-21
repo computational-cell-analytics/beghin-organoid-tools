@@ -4,9 +4,9 @@ Tools for Anne Beghin group's data.
 
 ## Installation
 
+Requires Python 3.11 or newer. In any Python environment (conda, venv, ...):
+
 ```bash
-conda create -n orgatools -c conda-forge python=3.12
-conda activate orgatools
 pip install git+https://github.com/computational-cell-analytics/beghin-organoid-tools.git
 ```
 
