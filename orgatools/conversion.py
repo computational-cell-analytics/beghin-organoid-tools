@@ -1,5 +1,7 @@
 """Convert the tif stacks of the Beghin lab to OME-Zarr."""
 
+# TODO: Extend the conversion to the format of the incoming EM data, once it is acquired.
+
 import os
 from glob import glob
 

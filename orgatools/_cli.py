@@ -63,8 +63,11 @@ def data_convert(input_path, output_folder, overwrite):
     if not paths:
         raise click.ClickException(f"No tif files found in {input_path}.")
 
-    table = Table("Input", "Axes", "Shape", "Voxel size [um]", "tif -> OME-Zarr [MB]")
+    # Only the input column wraps, the others stay on one line.
+    table = Table("Input", "Axes", "Shape", "Voxel size (um)", "Size (MB)")
     table.columns[0].overflow = "fold"
+    for column in table.columns[1:]:
+        column.no_wrap = True
     for tif_path, output_path in track(paths, description="Converting", console=console):
         if os.path.exists(output_path) and not overwrite:
             console.print(f"[yellow]Skipping {output_path}, it exists already.[/yellow]")
