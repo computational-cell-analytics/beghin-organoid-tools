@@ -5,9 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "orgatools"
 description = "Tools for Anne Beghin group's organoid data."
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dynamic = ["version"]
-dependencies = ["numpy", "tifffile", "zarr>=3", "ome-zarr>=0.19"]
+dependencies = ["numpy", "tifffile", "zarr>=3", "ome-zarr>=0.19", "click", "rich"]
+
+[project.scripts]
+orgatools = "orgatools._cli:cli"
 
 [tool.setuptools.dynamic]
 version = {attr = "orgatools.__version__.__version__"}

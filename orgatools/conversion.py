@@ -1,5 +1,8 @@
 """Convert the tif stacks of the Beghin lab to OME-Zarr."""
 
+import os
+from glob import glob
+
 import numpy as np
 import tifffile
 import zarr
@@ -102,3 +105,16 @@ def convert_tif(input_path, output_path, labels=False, pyramid=False):
     write_ome_zarr(data, axes, output_path, voxel_size, pyramid=pyramid, labels=labels)
     assert np.array_equal(read_ome_zarr(output_path), data), f"{output_path} differs from {input_path}."
     return data.shape, axes, voxel_size
+
+
+def find_tifs(input_path, output_folder):
+    """Pairs of each tif and its OME-Zarr output path, a folder is searched recursively and its layout is kept."""
+    if os.path.isdir(input_path):
+        paths = sorted(glob(os.path.join(input_path, "**", "*.tif*"), recursive=True))
+        relative_paths = [os.path.relpath(path, input_path) for path in paths]
+    else:
+        paths, relative_paths = [input_path], [os.path.basename(input_path)]
+    return [
+        (path, os.path.join(output_folder, relative_path.rsplit(".tif", 1)[0] + ".ome.zarr"))
+        for path, relative_path in zip(paths, relative_paths)
+    ]
