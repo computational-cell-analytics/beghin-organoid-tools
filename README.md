@@ -26,7 +26,7 @@ python scripts/convert_to_ome_zarr.py -i /path/to/tif/folder -o /path/to/output/
 
 Every tif in the folder (and its subfolders) becomes a `.ome.zarr` folder with the same name: lossless, about 2.5 - 3x
 smaller than the uncompressed tif, with the voxel size from the ImageJ metadata. The script checks every converted
-file against its tif. Add `--pyramid` for downsampled levels for faster viewing of very large stacks (about 30% larger).
+file against its tif.
 
 To send the results, put the `.ome.zarr` folders in one archive, e.g. `tar -cf data.tar *.ome.zarr`. They are compressed
 already, so the archive does not need compression.
