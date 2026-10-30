@@ -4,6 +4,7 @@ Usage:
     python check_segmentations.py -s dapi_ki67 -n s10  # the nuclei of one stack of 'dapi_ki67'
     python check_segmentations.py -s dapi_ecadh_btub -n Composite_s21  # the nuclei and the cells of one composite
     python check_segmentations.py -s dapi_ki67 -n s10 --spots /path/to/spots  # and the Ki67 spots of every method
+    python check_segmentations.py -s dapi_ki67 -n s10 --spots /path/to/spots --features /path/to/features  # and foci
 """
 
 import os
@@ -55,9 +56,19 @@ def load_filtered_nuclei(spot_folder, name):
     return imageio.imread(path) if os.path.exists(path) else None
 
 
-def show_stack(data_root, subset, name, channel_names, prediction_names, spots=None, filtered_nuclei=None):
+def load_feature_masks(feature_folder, name):
+    """Load the spheroid mask and the foci labels of compute_ki67_features.py."""
+    return {
+        "spheroid": imageio.imread(os.path.join(feature_folder, "spheroid", f"{name}_spheroid.tif")),
+        "ki67_foci": imageio.imread(os.path.join(feature_folder, "foci", f"{name}_ki67_foci.tif")),
+    }
+
+
+def show_stack(data_root, subset, name, channel_names, prediction_names, spots=None, filtered_nuclei=None,
+               feature_masks=None):
     """Load a stack and its micro-sam2 segmentations, and show them in napari, with the spots of each method and
-    the filtered nuclei they were detected in instead of the micro-sam2 nuclei (still available as hidden layer)."""
+    the filtered nuclei they were detected in instead of the micro-sam2 nuclei (still available as hidden layer),
+    and the spheroid mask and the foci."""
     raw, segmentations = load_stack(data_root, subset, name, prediction_names)
     assert raw.shape[1] == len(channel_names), f"{name}: expected {len(channel_names)} channels, got {raw.shape}."
     print(f"{subset} {name}: stack {raw.shape}, " + ", ".join(
@@ -77,6 +88,8 @@ def show_stack(data_root, subset, name, channel_names, prediction_names, spots=N
         n_removed = len(set(np.unique(segmentations["nucleus"])) - set(np.unique(filtered_nuclei)))
         print(f"nucleus_filtered: {n_removed} noise nuclei removed")
         viewer.add_labels(filtered_nuclei, name="nucleus_filtered", scale=SCALE)
+    for mask_name, mask in (feature_masks or {}).items():
+        viewer.add_labels(mask, name=mask_name, scale=SCALE, visible=mask_name != "spheroid")
     for (method, table), color in zip((spots or {}).items(), SPOT_COLORS):
         print(f"{method}: {len(table)} spots in {table.nucleus_id.nunique()} nuclei")
         coordinates = ["z", "y", "x"]
@@ -92,13 +105,14 @@ def show_stack(data_root, subset, name, channel_names, prediction_names, spots=N
     napari.run()
 
 
-def check_dapi_ki67(data_root, name, spot_folder=None):
-    """Show a stack of 'dapi_ki67', its nucleus segmentation and optionally the Ki67 spots."""
+def check_dapi_ki67(data_root, name, spot_folder=None, feature_folder=None):
+    """Show a stack of 'dapi_ki67', its nucleus segmentation and optionally the Ki67 spots and the feature masks."""
     spots = None if spot_folder is None else load_spots(spot_folder, name)
     filtered_nuclei = None if spot_folder is None else load_filtered_nuclei(spot_folder, name)
+    feature_masks = None if feature_folder is None else load_feature_masks(feature_folder, name)
     show_stack(
         data_root, "dapi_ki67", name, channel_names=("DAPI", "Ki67"), prediction_names=("nucleus",), spots=spots,
-        filtered_nuclei=filtered_nuclei,
+        filtered_nuclei=filtered_nuclei, feature_masks=feature_masks,
     )
 
 
@@ -116,10 +130,11 @@ def main():
     parser.add_argument("-s", "--subset", choices=("dapi_ki67", "dapi_ecadh_btub"), required=True)
     parser.add_argument("-n", "--name", required=True, help="The name of the stack, such as 's10' or 'Composite_s21'.")
     parser.add_argument("--spots", help="The output folder of detect_ki67_spots.py, only for 'dapi_ki67'.")
+    parser.add_argument("--features", help="The output folder of compute_ki67_features.py, only for 'dapi_ki67'.")
     args = parser.parse_args()
 
     if args.subset == "dapi_ki67":
-        check_dapi_ki67(args.input_folder, args.name, args.spots)
+        check_dapi_ki67(args.input_folder, args.name, args.spots, args.features)
     else:
         check_dapi_ecadh_btub(args.input_folder, args.name)
 

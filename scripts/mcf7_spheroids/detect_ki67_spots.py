@@ -78,9 +78,9 @@ def get_stack_paths(data_root):
     return [path for path in paths if "_prediction" not in os.path.basename(path)]
 
 
-def filter_nuclei(dapi, segmentation):
-    """Remove the noise nuclei at the z-borders, returns the filtered segmentation and the removed ids."""
-    ids = np.unique(segmentation)[1:]
+def compute_dapi_texture(dapi, segmentation, ids):
+    """The std of the high-pass filtered DAPI of each nucleus without the camera noise, relative to its median above
+    the offset, returns the texture and the median."""
     dapi = dapi.astype("float32")
     residual = dapi - ndimage.gaussian_filter(dapi, (0, 1, 1))
     # The fraction of the noise variance that remains after the high-pass filter.
@@ -90,7 +90,13 @@ def filter_nuclei(dapi, segmentation):
     noise_variance = noise_fraction * (DAPI_READ_VARIANCE + DAPI_GAIN * np.maximum(mean - DAPI_OFFSET, 0))
     variance = ndimage.mean(residual ** 2, segmentation, ids) - ndimage.mean(residual, segmentation, ids) ** 2
     signal_variance = np.maximum(variance - noise_variance, 0)
-    texture = np.sqrt(signal_variance) / np.maximum(median - DAPI_OFFSET, 1)
+    return np.sqrt(signal_variance) / np.maximum(median - DAPI_OFFSET, 1), median
+
+
+def filter_nuclei(dapi, segmentation):
+    """Remove the noise nuclei at the z-borders, returns the filtered segmentation and the removed ids."""
+    ids = np.unique(segmentation)[1:]
+    texture, median = compute_dapi_texture(dapi, segmentation, ids)
     z_center = np.array(ndimage.center_of_mass(np.ones_like(segmentation), segmentation, ids))[:, 0]
     at_border = (z_center < BORDER_SLICES) | (z_center > segmentation.shape[0] - 1 - BORDER_SLICES)
     removed = ids[at_border & (texture > MAX_TEXTURE) & (median < MAX_DAPI)]

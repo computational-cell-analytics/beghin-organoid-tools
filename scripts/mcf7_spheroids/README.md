@@ -5,6 +5,9 @@ The usage is in the docstring of each script.
 
 - `segment_mcf7_spheroids.py`: micro-sam2 nucleus (DAPI) and cell segmentation.
 - `detect_ki67_spots.py`: Ki67 spot detection in the nuclei, one table per stack and method.
+- `compute_ki67_features.py`: spheroid mask, Ki67 foci masks and the features of the spheroids, nuclei and foci.
+- `plot_ki67_spots_vs_nucleus_size.py`: the number of Ki67 spots per nucleus against the nucleus volume, pooled and
+  per spheroid.
 - `check_segmentations.py`: napari viewer for the stacks, segmentations and spots.
 - `show_ki67_spots.sh`: opens the stacks with their spots one after the other.
 
@@ -27,3 +30,23 @@ The detection, per nucleus:
   background and a peak of at least 450 counts. Spill-over from neighbouring nuclei and split foci are removed.
 
 The main settings are `MIN_PEAK`, `MIN_CONTRAST` and `EROSION` in `detect_ki67_spots.py`.
+
+## Features
+
+`compute_ki67_features.py` computes the features on three levels from the filtered nuclei and the `dog` spots, in
+`/mnt/vast-nhr/projects/cidas/cca/experiments/beghin_organoids/mcf7_ki67_features`:
+
+```
+spheroid/<stack>_spheroid.tif  # spheroid mask: closing (10 um) of the nuclei, holes filled
+foci/<stack>_ki67_foci.tif     # foci labels, grown from the dog spots to half their contrast; label = focus_id
+tables/<stack>_spheroid.csv    # one row: size, shape, z-range, touches_z_border, counts
+tables/<stack>_nuclei.csv      # one row per nucleus: shape, DAPI and Ki67 intensity, foci summary, spatial
+                               # distribution of the foci, position in the spheroid
+tables/<stack>_foci.csv        # one row per focus: size, shape, intensity, position in the nucleus
+```
+
+The tables join on `(stack, nucleus_id)`; read one level for all stacks with
+`pd.concat(map(pd.read_csv, glob(".../tables/*_nuclei.csv")), ignore_index=True)`. The columns are described in the
+docstring of the script. Note for the analysis: the signal drops 5 - 8x from the top to the bottom of a spheroid, so
+the position in the spheroid is confounded with the depth (`depth_um`); some spheroids are cut at a z-border
+(`touches_z_border`), and a few nuclei are outside of the spheroid mask (`in_spheroid`).
