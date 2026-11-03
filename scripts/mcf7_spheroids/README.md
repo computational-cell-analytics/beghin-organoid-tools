@@ -1,13 +1,15 @@
 # MCF7 spheroids
 
-Segmentation of the MCF7 spheroids and detection of the Ki67 spots in the nuclei of `dapi_ki67` (39 stacks, s2 - s40).
-The usage is in the docstring of each script.
+Segmentation of the MCF7 spheroids, detection of the Ki67 spots in the nuclei of `dapi_ki67` (39 stacks, s2 - s40) and
+the cell to nucleus volume ratio of `dapi_ecadh_btub` (3 stacks). The usage is in the docstring of each script.
 
 - `segment_mcf7_spheroids.py`: micro-sam2 nucleus (DAPI) and cell segmentation.
 - `detect_ki67_spots.py`: Ki67 spot detection in the nuclei, one table per stack and method.
 - `compute_ki67_features.py`: spheroid mask, Ki67 foci masks and the features of the spheroids, nuclei and foci.
 - `plot_ki67_spots_vs_nucleus_size.py`: the number of Ki67 spots per nucleus against the nucleus volume, pooled and
   per spheroid.
+- `compute_cell_nucleus_ratio.py`: the volume ratio of the cells to their nuclei in `dapi_ecadh_btub`, one table per
+  stack and the histograms of the ratio.
 - `check_segmentations.py`: napari viewer for the stacks, segmentations and spots.
 - `show_ki67_spots.sh`: opens the stacks with their spots one after the other.
 
@@ -50,3 +52,12 @@ The tables join on `(stack, nucleus_id)`; read one level for all stacks with
 docstring of the script. Note for the analysis: the signal drops 5 - 8x from the top to the bottom of a spheroid, so
 the position in the spheroid is confounded with the depth (`depth_um`); some spheroids are cut at a z-border
 (`touches_z_border`), and a few nuclei are outside of the spheroid mask (`in_spheroid`).
+
+## Cell to nucleus volume ratio
+
+`compute_cell_nucleus_ratio.py` assigns every nucleus to the cell that contains most of it and writes one row per cell
+to `/mnt/vast-nhr/projects/cidas/cca/experiments/beghin_organoids/mcf7_cell_nucleus_ratio/<stack>_cells.csv`. The
+nucleus volume of a cell is the sum of its nuclei. Use the `valid` cells for the analysis: exactly one nucleus, at least
+90% of the nucleus in the cell, and neither touches the stack border. s21 and s23 are cut at the first slice, so many
+of their cells are truncated. The histograms of the ratio of the valid cells, per stack and combined, are in
+`.../mcf7_cell_nucleus_ratio/plots/cell_to_nucleus_ratio.png`.
